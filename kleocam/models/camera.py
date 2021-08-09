@@ -39,4 +39,4 @@ class CameraState(BaseModel):
             settings=CameraSettings.from_redis(r),
             active=r.get("active"),
             savefolder=r.get("savefolder")
-        
+        )
