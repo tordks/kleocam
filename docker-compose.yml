@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+    app:
+        container_name: kleocam
+        image: kleocam:latest
+        build: .
+    redis:
+        container_name: redis
+        image: redis:latest
+        command: redis-server --save 600 10
+        ports:
+            - 6379:6379
