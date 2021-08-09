@@ -1,9 +1,9 @@
 version: '3.8'
 services:
-    app:
-        container_name: kleocam
-        image: kleocam:latest
-        build: .
+    #app:
+    #    container_name: kleocam
+    #    image: kleocam:latest
+    #    build: .
     redis:
         container_name: redis
         image: redis:latest
