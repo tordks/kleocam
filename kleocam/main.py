@@ -25,7 +25,7 @@ async def initialize_camera_settings():
     r = Redis()
     r.mset(CameraSettings().dict())
     r.set("active", 0)
-    r.set("savefolder", "./")
+    r.set("savefolder", ".")
 
 
 @app.on_event("shutdown")

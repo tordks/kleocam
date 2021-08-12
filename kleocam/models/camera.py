@@ -27,19 +27,19 @@ class CameraSettings(BaseModel):
 
 
 class CameraState(BaseModel):
-    settings: CameraSettings
-    savefolder: Path = "."
+    settings: CameraSettings = CameraSettings()
+    savefolder: Path = Path(".")
     active: int = 0
 
     def to_redis(self, r: Redis):
         self.settings.to_redis(r),
         r.set("active", self.active),
-        r.set("savefolder", self.savefolder)
+        r.set("savefolder", str(self.savefolder))
 
     @staticmethod
     def from_redis(r: Redis):
         return CameraState(
             settings=CameraSettings.from_redis(r),
             active=r.get("active"),
-            savefolder=r.get("savefolder")
+            savefolder=Path(r.get("savefolder")),
         )
