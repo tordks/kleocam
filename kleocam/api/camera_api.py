@@ -19,19 +19,20 @@ def state() -> CameraState:
 def start():
     r = Redis()
     from picamera import PiCamera
-    camera = PiCamera(**CameraSettings.from_redis(r))
-    camera.start_preview()
-    # Camera warm-up time
-    time.sleep(2)
-    camera.capture('foo.jpg')
+    camera = PiCamera(**CameraSettings.from_redis(r).dict())
 
 
 
 @router.put("/api/stop")
 def stop():
-    pass
+    ...
 
 
 @router.put("/api/capture")
 def capture():
-    pass
+    from picamera import PiCamera
+    camera = PiCamera(**CameraSettings.from_redis(r).dict())
+    camera.start_preview()
+    # Camera warm-up time
+    time.sleep(2)
+    camera.capture('foo.jpg')
