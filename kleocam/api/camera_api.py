@@ -1,3 +1,5 @@
+import time
+
 from kleocam.models.camera import CameraSettings, CameraState
 from redis import Redis
 import fastapi
@@ -17,7 +19,12 @@ def state() -> CameraState:
 def start():
     r = Redis()
     from picamera import PiCamera
-    camera = PiCamera(**CameraSettings.from_redis())
+    camera = PiCamera(**CameraSettings.from_redis(r))
+    camera.start_preview()
+    # Camera warm-up time
+    time.sleep(2)
+    camera.capture('foo.jpg')
+
 
 
 @router.put("/api/stop")
