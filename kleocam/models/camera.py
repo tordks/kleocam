@@ -5,7 +5,7 @@ from redis import Redis
 
 class CameraSettings(BaseModel):
     """
-    Settings for the camera.
+    Settings for the camera. Need to be a subset of the picamera settings.
     """
 
     width: int = 1280
