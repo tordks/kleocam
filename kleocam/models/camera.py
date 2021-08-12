@@ -16,7 +16,6 @@ class CameraSettings(BaseModel):
         r.set("width", self.width)
         r.set("height", self.height)
         r.set("framerate", self.framerate)
-        r.set("savefolder", self.savefolder)
 
     @staticmethod
     def from_redis(r: Redis):
@@ -32,9 +31,13 @@ class CameraState(BaseModel):
     savefolder: Path = "."
     active: int = 0
 
+    def to_redis(self, r: Redis):
+        self.settings.to_redis(r),
+        r.set("active", self.active),
+        r.set("savefolder", self.savefolder)
+
     @staticmethod
     def from_redis(r: Redis):
-
         return CameraState(
             settings=CameraSettings.from_redis(r),
             active=r.get("active"),
