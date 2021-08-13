@@ -44,5 +44,5 @@ def capture():
     from picamera import PiCamera
     r = Redis()
 
-    with Recorder(**CameraState.from_redis(r).dict()) as rec:
+    with Recorder(CameraState.from_redis(r).dict()) as rec:
         rec.camera.capture()
