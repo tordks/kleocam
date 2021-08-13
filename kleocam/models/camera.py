@@ -12,6 +12,7 @@ class CameraSettings(BaseModel):
     # figure out how to manage dict with list ion redis.
     resolution: tuple[int, int] = (1280, 720)
     framerate: int = 30
+    iso: int = 200
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
@@ -21,6 +22,7 @@ class CameraSettings(BaseModel):
             r.lset("resolution", 1, self.resolution[1])
 
         r.set("framerate", self.framerate)
+        r.set("iso", self.iso)
 
     @staticmethod
     def from_redis(r: Redis):

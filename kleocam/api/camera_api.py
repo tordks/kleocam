@@ -1,6 +1,7 @@
 import time
 
 from kleocam.models.camera import CameraSettings, CameraState
+from kleocam.recorder import Recorder
 from redis import Redis
 import fastapi
 
@@ -42,8 +43,6 @@ def capture():
     """
     from picamera import PiCamera
     r = Redis()
-    camera = PiCamera(**CameraSettings.from_redis(r).dict())
-    camera.start_preview()
-    # Camera warm-up time
-    time.sleep(2)
-    camera.capture('foo.jpg')
+
+    with Recorder(**CameraState.from_redis(r).dict()) as rec:
+        rec.camera.capture()

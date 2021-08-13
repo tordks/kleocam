@@ -1,39 +1,47 @@
 import time
 from picamera import PiCamera
 
+from kleocam.models.camera import CameraSettings, CameraState
+
 # TODO: create dummy picamera class to be able to test on desktop
-# TODO: Change into initialize_camera function? Factory class?
 class Recorder:
     """
     Class for taking images and recording video
     """
 
-    def __init__(self, **camera_settings):
+    def __init__(self, state: CameraState, consistent_img: bool = True):
 
-        """
-        initialize camera settings
-        """
-
-        self.camera = PiCamera(**camera_settings)
+        self.camera = PiCamera(**state.settings)
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
-        # Set ISO to the desired value
-        self.camera.iso = 50
-        # Wait for the automatic gain control to settle
-        time.sleep(2)
-        # Now fix the values
-        self.camera.shutter_speed = self.camera.exposure_speed
-        self.camera.exposure_mode = "off"
-        g = self.camera.awb_gains
-        self.camera.awb_mode = "off"
-        self.camera.awb_gains = g
+        if consistent_img:
+            # Set ISO to the desired value
+            # self.camera.iso = CameraSettings.iso
+            # Wait for the automatic gain control to settle
+            time.sleep(2)
+            # Now fix the values
+            self.camera.shutter_speed = self.camera.exposure_speed
+            self.camera.exposure_mode = "off"
+            g = self.camera.awb_gains
+            self.camera.awb_mode = "off"
+            self.camera.awb_gains = g
 
         # camera warmup time
         self.camera.start_preview()
         time.sleep(2)
+        self.camera.stop_preview()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        self.__del__()
 
     def __del__(self):
         self.camera.close()
+
+    def update_state(self, state: CameraState):
+        ...
 
 
 if __name__ == "__main__":
