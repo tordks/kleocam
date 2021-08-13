@@ -14,7 +14,8 @@ class CameraSettings(BaseModel):
     framerate: int = 30
 
     def to_redis(self, r: Redis):
-        r.lset("resolution", self.resolution)
+        r.lset("resolution", 0, self.resolution[0])
+        r.lset("resolution", 1, self.resolution[1])
         r.set("framerate", self.framerate)
 
     @staticmethod
