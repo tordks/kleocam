@@ -25,7 +25,7 @@ async def initialize_camera_settings():
     r = Redis()
     CameraSettings().to_redis(r)
     state = CameraState(settings=CameraSettings(), active=0, savefolder=".")
-    state.to_redis()
+    state.to_redis(r)
 
 
 @app.on_event("shutdown")
