@@ -4,7 +4,7 @@ from redis import Redis
 import uvicorn
 
 from kleocam.api import camera_api
-from kleocam.models.camera import CameraSettings
+from kleocam.models.camera import CameraSettings, CameraState
 
 app = fastapi.FastAPI()
 
@@ -23,9 +23,9 @@ def configure_routing():
 @app.on_event("startup")
 async def initialize_camera_settings():
     r = Redis()
-    r.mset(CameraSettings().dict())
-    r.set("active", 0)
-    r.set("savefolder", ".")
+    CameraSettings().to_redis(r)
+    state = CameraState(settings=CameraSettings(), active=0, savefolder=".")
+    state.to_redis()
 
 
 @app.on_event("shutdown")
