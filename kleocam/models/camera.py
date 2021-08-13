@@ -8,13 +8,13 @@ class CameraSettings(BaseModel):
     Settings for the camera. Need to be a subset of the picamera settings.
     """
 
-    width: int = 1280
-    height: int = 720
+    # TODO: picamera need to insert resolution, not width/height => need to
+    # figure out how to manage dict with list ion redis.
+    resolution: tuple[int, int] = (1280, 720)
     framerate: int = 30
 
     def to_redis(self, r: Redis):
-        r.set("width", self.width)
-        r.set("height", self.height)
+        r.lset("resolution", self.resolution)
         r.set("framerate", self.framerate)
 
     @staticmethod
