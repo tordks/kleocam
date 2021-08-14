@@ -1,22 +1,23 @@
 import time
 from picamera import PiCamera
 
-from kleocam.models.camera import CameraSettings, CameraState
+from kleocam.models.camera import CameraState
 
 # TODO: create dummy picamera class to be able to test on desktop
+# TODO: Force singleton + share object?
+# TODO: Currently calling camera object directly, make wrapper to handle everything here?
 class Recorder:
     """
     Class for taking images and recording video
     """
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
-
-        self.camera = PiCamera(**state.settings)
+        self.camera = PiCamera(resolution=state.resolution, framerate=state.framerate)
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
             # Set ISO to the desired value
-            # self.camera.iso = CameraSettings.iso
+            self.camera.iso = state.iso
             # Wait for the automatic gain control to settle
             time.sleep(2)
             # Now fix the values
@@ -34,7 +35,7 @@ class Recorder:
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.__del__()
 
     def __del__(self):

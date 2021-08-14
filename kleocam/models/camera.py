@@ -1,18 +1,22 @@
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from redis import Redis
 
 
-class CameraSettings(BaseModel):
-    """
-    Settings for the camera. Need to be a subset of the picamera settings.
-    """
-
-    # TODO: picamera need to insert resolution, not width/height => need to
-    # figure out how to manage dict with list ion redis.
-    resolution: tuple[int, int] = (1280, 720)
+class CameraState(BaseModel):
+    resolution: tuple[int, int] = (1640, 1232)
     framerate: int = 30
-    iso: int = 200
+    iso: int = 300
+    recording_time = 300
+
+    savefolder: Path = Path("/media/pi/Tord/kleocam")
+    active: int = 0
+
+    @validator("savefolder")
+    def validate_savefolder(cls, value):
+        if not value.exists():
+            raise ValueError(f"savefolder {value} does not exist")
+        return value
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
@@ -23,30 +27,17 @@ class CameraSettings(BaseModel):
 
         r.set("framerate", self.framerate)
         r.set("iso", self.iso)
-
-    @staticmethod
-    def from_redis(r: Redis):
-        return CameraSettings(
-            width=r.get("width").decode(),
-            height=r.get("height").decode(),
-            framerate=r.get("framerate").decode(),
-        )
-
-
-class CameraState(BaseModel):
-    settings: CameraSettings = CameraSettings()
-    savefolder: Path = Path(".")
-    active: int = 0
-
-    def to_redis(self, r: Redis):
-        self.settings.to_redis(r),
-        r.set("active", self.active),
+        r.set("recording_time", self.recording_time)
         r.set("savefolder", str(self.savefolder))
+        r.set("active", self.active)
 
     @staticmethod
     def from_redis(r: Redis):
         return CameraState(
-            settings=CameraSettings.from_redis(r),
-            active=r.get("active"),
+            resolution=r.lrange("resolution", 0, 2),
+            framerate=r.get("framerate").decode(),
+            iso=r.get("iso").decode(),
+            recording_time=r.get("recording_time"),
             savefolder=Path(r.get("savefolder").decode()),
+            active=r.get("active"),
         )
