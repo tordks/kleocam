@@ -15,5 +15,8 @@ python = "^3.9"
 redis = "^3.5.3"
 uvicorn = "^0.14.0"
 
+# TODO: add picamera dependency. Add it as an extra dependency that does not
+# need to be installed when not on rpi
+
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
