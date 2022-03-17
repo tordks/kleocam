@@ -1,7 +1,15 @@
 import time
-from picamera import PiCamera
+from unittest.mock import MagicMock
 
+from kleocam.utils import on_arm_machine
 from kleocam.models.camera import CameraState
+
+# Assume we are on a raspberry pi if we are on an arm machine
+if on_arm_machine():
+    from picamera import PiCamera
+else:
+    # TODO: Make mock output frames
+    PiCamera = MagicMock()
 
 # TODO: create dummy picamera class to be able to test on desktop
 # TODO: Force singleton + share object?
@@ -12,7 +20,9 @@ class Recorder:
     """
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
-        self.camera = PiCamera(resolution=state.resolution, framerate=state.framerate)
+        self.camera = PiCamera(
+            resolution=state.resolution, framerate=state.framerate
+        )
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
@@ -46,7 +56,7 @@ class Recorder:
 
 
 if __name__ == "__main__":
-    recorder = Recorder()
+    recorder = Recorder(CameraState())
 
     recorder.camera.capture("image.jpg")
 
