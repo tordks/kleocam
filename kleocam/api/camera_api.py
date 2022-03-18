@@ -19,7 +19,7 @@ def state() -> CameraState:
     return CameraState.from_redis(r)
 
 
-@router.put("/api/state")
+@router.post("/api/state")
 def state(state: CameraState):
     r = Redis()
     state.to_redis(r)
@@ -33,15 +33,14 @@ async def start(background_tasks: BackgroundTasks):
 
     def record():
         logger.info("Start recording...")
-        r = Redis()
-        # TODO: add error handling
-        state = CameraState.from_redis(r)
-
-        logger.info(f"savefolder: {state.savefolder}")
         try:
+            r = Redis()
+            state = CameraState.from_redis(r)
+            logger.info(f"savefolder: {state.savefolder}")
+
             with Recorder(state) as rec:
                 state.active = 1
-                state.to_redis()
+                state.to_redis(r)
 
                 filename = (
                     datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".h264"
@@ -56,7 +55,7 @@ async def start(background_tasks: BackgroundTasks):
                 while True:
                     state = CameraState.from_redis(r)
                     if not state.active:
-                        logger.info("Break")
+                        logger.info("Stopping recording loop")
                         break
                     filename = (
                         datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -65,10 +64,12 @@ async def start(background_tasks: BackgroundTasks):
                     logger.info(f"Recording to: {filename}")
                     rec.camera.split_recording(str(state.savefolder / filename))
                     rec.camera.wait_recording(state.recording_time)
-                logger.info("Stop recording")
-                rec.camera.stop_recording()
 
-        except Exception:
+                rec.camera.stop_recording()
+                logger.info("Recording stopped")
+
+        except Exception as err:
+            logger.error(f"Failed to start recording: {err}")
             r.set("active", 0)
 
     background_tasks.add_task(record)
@@ -82,7 +83,10 @@ async def stop():
     """
     r = Redis()
     r.set("active", 0)
-    logger.info("Stop recording")
+    # TODO: use two variables to check whether recording is in progress. active
+    # and recording? active is now more a desired state since recording will
+    # finish the current file before stopping.
+    logger.info("Set record state to inactive")
 
 
 @router.put("/api/capture")
