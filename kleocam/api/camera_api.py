@@ -50,7 +50,7 @@ async def start(background_tasks: BackgroundTasks):
             recording_output_dir.mkdir(parents=True)
             suffix = ".h264"
 
-            with Recorder(state) as rec:
+            with Recorder(state) as camera:
                 state.active = 1
                 state.to_redis(r)
 
@@ -61,8 +61,8 @@ async def start(background_tasks: BackgroundTasks):
                 )
                 logger.info(f"Recording to: {filepath.absolute()}")
 
-                rec.camera.start_recording(str(state.output_dir / filepath))
-                rec.camera.wait_recording(state.recording_time)
+                camera.start_recording(str(state.output_dir / filepath))
+                camera.wait_recording(state.recording_time)
 
                 # TODO: make the recording stop soon after sending stop signal,
                 # instead of waiting for recording time.
@@ -75,10 +75,10 @@ async def start(background_tasks: BackgroundTasks):
                         recording_output_dir, suffix
                     )
                     logger.info(f"Recording to: {filepath}")
-                    rec.camera.split_recording(filepath)
-                    rec.camera.wait_recording(state.recording_time)
+                    camera.split_recording(filepath)
+                    camera.wait_recording(state.recording_time)
 
-                rec.camera.stop_recording()
+                camera.stop_recording()
                 logger.info("Recording stopped")
 
         except Exception as err:
@@ -112,5 +112,5 @@ def capture():
 
     filepath = create_recording_filepath(state.output_dir, ".jpg")
     logger.info(f"Capture image to {filepath}")
-    with Recorder(state) as rec:
-        rec.camera.capture(filepath)
+    with Recorder(state) as camera:
+        camera.capture(filepath)

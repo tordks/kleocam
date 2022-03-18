@@ -54,9 +54,8 @@ class Recorder:
         time.sleep(2)
         self.camera.stop_preview()
 
-    # TODO: return camera on entering context.
     def __enter__(self):
-        return self
+        return self.camera
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.__del__()
