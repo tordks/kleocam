@@ -2,6 +2,14 @@ from pathlib import Path
 from pydantic import BaseModel, validator
 from redis import Redis
 
+from utils import on_arm_machine
+
+# TODO: handle savefolder through env variables
+if on_arm_machine():
+    SAVEFOLDER = Path("/media/pi/Tord/kleocam")
+else:
+    SAVEFOLDER = "kleocam_temp"
+
 
 class CameraState(BaseModel):
     resolution: tuple[int, int] = (1640, 1232)
@@ -9,7 +17,7 @@ class CameraState(BaseModel):
     iso: int = 300
     recording_time = 300
 
-    savefolder: Path = Path("/media/pi/Tord/kleocam")
+    savefolder: Path = SAVEFOLDER
     active: int = 0
 
     @validator("savefolder")
