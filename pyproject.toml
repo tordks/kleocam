@@ -1,19 +1,22 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+
 [tool.poetry]
+authors = ["Tord Kriznik Sørensen <tordks@hotmail.com>"]
+description = ""
 name = "kleocam"
 version = "0.0.1"
-description = ""
-authors = ["Tord Kriznik Sørensen <tordks@hotmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
 fastapi = "^0.66.0"
-uvicorn = "^0.14.0"
 loguru = "^0.5.3"
+python = "^3.9"
 redis = "^3.5.3"
+uvicorn = "^0.14.0"
+
+# TODO: add picamera dependency. Add it as an extra dependency that does not
+# need to be installed when not on rpi
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
