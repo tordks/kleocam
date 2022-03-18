@@ -1,17 +1,20 @@
 import time
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from kleocam.utils import on_arm_machine
 from kleocam.models.camera import CameraState
 
-# Assume we are on a raspberry pi if we are on an arm machine
+# Assume we are on a raspberry pi if we are on an arm machine. If not we are in
+# development mode without access to the picamera module
 if on_arm_machine():
     from picamera import PiCamera
 else:
-    # TODO: Make mock output frames
     PiCamera = MagicMock()
+    Picamera.wait_recording.side_effect = lambda time: time.sleep(time)
+    Picamera.split_recording.side_effect = lambda fpath: Path(fpath).touch()
 
-# TODO: create dummy picamera class to be able to test on desktop
+
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
 class Recorder:
