@@ -5,15 +5,6 @@ from unittest.mock import MagicMock
 from kleocam.utils import on_arm_machine
 from kleocam.models.camera import CameraState
 
-# Assume we are on a raspberry pi if we are on an arm machine. If not we are in
-# development mode without access to the picamera module
-if on_arm_machine():
-    from picamera import PiCamera
-else:
-    PiCamera = MagicMock()
-    Picamera.wait_recording.side_effect = lambda time: time.sleep(time)
-    Picamera.split_recording.side_effect = lambda fpath: Path(fpath).touch()
-
 
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
@@ -23,9 +14,26 @@ class Recorder:
     """
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
-        self.camera = PiCamera(
-            resolution=state.resolution, framerate=state.framerate
-        )
+        # Assume we are on a raspberry pi if we are on an arm machine. If not we are in
+        # development mode without access to the picamera module
+        if on_arm_machine():
+            from picamera import PiCamera
+
+            self.camera = PiCamera(
+                resolution=state.resolution, framerate=state.framerate
+            )
+        else:
+            camera = MagicMock(
+                resolution=state.resolution, framerate=state.framerate
+            )
+            camera.wait_recording.side_effect = lambda rec_time: time.sleep(
+                rec_time
+            )
+            camera.split_recording.side_effect = lambda fpath: Path(
+                fpath
+            ).touch()
+            camera.capture.side_effect = lambda fpath: Path(fpath).touch()
+            self.camera = camera
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
