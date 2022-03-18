@@ -8,7 +8,7 @@ from utils import on_arm_machine
 if on_arm_machine():
     SAVEFOLDER = Path("/media/pi/Tord/kleocam")
 else:
-    SAVEFOLDER = "kleocam_temp"
+    SAVEFOLDER = Path("kleocam_temp")
 
 
 class CameraState(BaseModel):
@@ -17,14 +17,8 @@ class CameraState(BaseModel):
     iso: int = 300
     recording_time = 300
 
-    savefolder: Path = SAVEFOLDER
+    output_dir: Path = SAVEFOLDER
     active: int = 0
-
-    @validator("savefolder")
-    def validate_savefolder(cls, value):
-        if not value.exists():
-            raise ValueError(f"savefolder {value} does not exist")
-        return value
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
@@ -36,7 +30,7 @@ class CameraState(BaseModel):
         r.set("framerate", self.framerate)
         r.set("iso", self.iso)
         r.set("recording_time", self.recording_time)
-        r.set("savefolder", str(self.savefolder))
+        r.set("savefolder", str(self.output_dir))
         r.set("active", self.active)
 
     @staticmethod

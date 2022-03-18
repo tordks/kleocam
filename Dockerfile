@@ -14,6 +14,7 @@ RUN python -m venv /venv
 RUN /venv/bin/pip install "poetry==$POETRY_VERSION"
 
 # TODO: dont copy entire repo?
+# TODO: can we reuse environment if only copying poetry.lock first?
 COPY . /app
 RUN /venv/bin/poetry export -f requirements.txt | /venv/bin/pip install -r /dev/stdin
 RUN /venv/bin/poetry build && /venv/bin/pip install dist/*.whl
