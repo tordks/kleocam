@@ -21,6 +21,7 @@ RUN /venv/bin/poetry build && /venv/bin/pip install dist/*.whl
 
 FROM python:3.9-slim
 
+# TODO: Mount instead of copy to capture changes in code
 COPY --from=build /venv /venv
 COPY --from=build /app /app
 
