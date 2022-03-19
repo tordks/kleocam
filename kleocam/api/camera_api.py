@@ -75,7 +75,7 @@ async def start(background_tasks: BackgroundTasks):
                         recording_output_dir, suffix
                     )
                     logger.info(f"Recording to: {filepath}")
-                    camera.split_recording(filepath)
+                    camera.split_recording(str(filepath))
                     camera.wait_recording(state.recording_time)
 
                 camera.stop_recording()
@@ -113,4 +113,4 @@ def capture():
     filepath = create_recording_filepath(state.output_dir, ".jpg")
     logger.info(f"Capture image to {filepath}")
     with Recorder(state) as camera:
-        camera.capture(filepath)
+        camera.capture(str(filepath))

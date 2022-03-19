@@ -1,14 +1,8 @@
+import os
 from pathlib import Path
-from pydantic import BaseModel, validator
+
+from pydantic import BaseModel
 from redis import Redis
-
-from utils import on_arm_machine
-
-# TODO: handle savefolder through env variables
-if on_arm_machine():
-    SAVEFOLDER = Path("/media/pi/Tord/kleocam")
-else:
-    SAVEFOLDER = Path("kleocam_temp")
 
 
 class CameraState(BaseModel):
@@ -17,7 +11,8 @@ class CameraState(BaseModel):
     iso: int = 300
     recording_time = 300
 
-    output_dir: Path = SAVEFOLDER
+    # TODO: add validation for output_dir
+    output_dir: Path = Path(os.environ["OUTPUT_DIR"])
     active: int = 0
 
     def to_redis(self, r: Redis):
