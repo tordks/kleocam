@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from loguru import logger
 
 import fastapi
@@ -10,7 +11,15 @@ from redis import Redis
 
 router = fastapi.APIRouter()
 
-# TODO: Use a global camera object?
+
+def create_recording_output_dir(output_dir: Path):
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    return output_dir / now
+
+
+def create_recording_filepath(recording_output_dir: Path, suffix: str):
+    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    return recording_output_dir / (now + suffix)
 
 
 @router.get("/api/state")
@@ -36,19 +45,24 @@ async def start(background_tasks: BackgroundTasks):
         try:
             r = Redis()
             state = CameraState.from_redis(r)
-            logger.info(f"savefolder: {state.savefolder}")
 
-            with Recorder(state) as rec:
+            recording_output_dir = create_recording_output_dir(state.output_dir)
+            recording_output_dir.mkdir(parents=True)
+            suffix = ".h264"
+
+            with Recorder(state) as camera:
                 state.active = 1
                 state.to_redis(r)
 
-                filename = (
-                    datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".h264"
+                # TODO: abstract out recording folder management to be reused in
+                # other recording calls, eg. capture.
+                filepath = create_recording_filepath(
+                    recording_output_dir, suffix
                 )
-                logger.info(f"Recording to: {filename}")
+                logger.info(f"Recording to: {filepath.absolute()}")
 
-                rec.camera.start_recording(str(state.savefolder / filename))
-                rec.camera.wait_recording(state.recording_time)
+                camera.start_recording(str(state.output_dir / filepath))
+                camera.wait_recording(state.recording_time)
 
                 # TODO: make the recording stop soon after sending stop signal,
                 # instead of waiting for recording time.
@@ -57,15 +71,14 @@ async def start(background_tasks: BackgroundTasks):
                     if not state.active:
                         logger.info("Stopping recording loop")
                         break
-                    filename = (
-                        datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                        + ".h264"
+                    filepath = create_recording_filepath(
+                        recording_output_dir, suffix
                     )
-                    logger.info(f"Recording to: {filename}")
-                    rec.camera.split_recording(str(state.savefolder / filename))
-                    rec.camera.wait_recording(state.recording_time)
+                    logger.info(f"Recording to: {filepath}")
+                    camera.split_recording(filepath)
+                    camera.wait_recording(state.recording_time)
 
-                rec.camera.stop_recording()
+                camera.stop_recording()
                 logger.info("Recording stopped")
 
         except Exception as err:
@@ -94,10 +107,10 @@ def capture():
     """
     Capture an image
     """
-    logger.info("Capture image")
     r = Redis()
     state = CameraState.from_redis(r)
 
-    filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".jpg"
-    with Recorder(state) as rec:
-        rec.camera.capture(str(state.savefolder / filename))
+    filepath = create_recording_filepath(state.output_dir, ".jpg")
+    logger.info(f"Capture image to {filepath}")
+    with Recorder(state) as camera:
+        camera.capture(filepath)

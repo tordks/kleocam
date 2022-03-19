@@ -8,6 +8,7 @@ from kleocam.models.camera import CameraState
 
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
+# TODO: Convert this to function that just returns camera object?
 class Recorder:
     """
     Class for taking images and recording video
@@ -54,7 +55,7 @@ class Recorder:
         self.camera.stop_preview()
 
     def __enter__(self):
-        return self
+        return self.camera
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.__del__()
