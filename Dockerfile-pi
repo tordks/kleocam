@@ -1,0 +1,51 @@
+# TODO: split into multistaged.
+FROM python:3.9-slim as build
+
+WORKDIR /app
+
+ENV PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VERSION=1.1.13
+
+# wheels are not built for all arm systems and we hence need some build
+# dependencies.
+RUN apt update && apt install -y build-essential libffi-dev libssl-dev curl
+
+# Set up python environment
+RUN python -m venv /venv
+RUN /venv/bin/pip install wheel
+
+# Install poetry
+# rust needed for implicit dependency for poetry: cryptography
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN /venv/bin/pip install "poetry==$POETRY_VERSION"
+
+# Install app and python dependencies
+# TODO: dont copy entire repo?
+# TODO: can we reuse environment if only copying poetry.lock first?
+COPY . /app
+
+RUN /venv/bin/poetry export -f requirements.txt | /venv/bin/pip install -r /dev/stdin
+# TODO: add picamera as extra dependency install like kleocam[pi]
+RUN /venv/bin/pip install picamera==1.13
+RUN /venv/bin/poetry build && /venv/bin/pip install dist/*.whl
+
+
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY --from=build /venv /venv
+COPY --from=build /app /app
+
+RUN mkdir /data
+
+ENV OUTPUT_DIR=/data \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1
+
+CMD cd /app/kleocam && /venv/bin/uvicorn --host 0.0.0.0 main:app

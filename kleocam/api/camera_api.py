@@ -51,7 +51,7 @@ async def start(background_tasks: BackgroundTasks):
             suffix = ".h264"
 
             with Recorder(state) as camera:
-                state.active = 1
+                state.recording = 1
                 state.to_redis(r)
 
                 # TODO: abstract out recording folder management to be reused in
@@ -68,22 +68,23 @@ async def start(background_tasks: BackgroundTasks):
                 # instead of waiting for recording time.
                 while True:
                     state = CameraState.from_redis(r)
-                    if not state.active:
+                    if state.stop_recording:
                         logger.info("Stopping recording loop")
                         break
                     filepath = create_recording_filepath(
                         recording_output_dir, suffix
                     )
                     logger.info(f"Recording to: {filepath}")
-                    camera.split_recording(filepath)
+                    camera.split_recording(str(filepath))
                     camera.wait_recording(state.recording_time)
 
                 camera.stop_recording()
+                state.set_recording_stopped(r)
                 logger.info("Recording stopped")
 
         except Exception as err:
             logger.error(f"Failed to start recording: {err}")
-            r.set("active", 0)
+            state.set_recording_stopped(r)
 
     background_tasks.add_task(record)
     return {"message": "recording started in the background"}
@@ -95,11 +96,8 @@ async def stop():
     Stop recording
     """
     r = Redis()
-    r.set("active", 0)
-    # TODO: use two variables to check whether recording is in progress. active
-    # and recording? active is now more a desired state since recording will
-    # finish the current file before stopping.
-    logger.info("Set record state to inactive")
+    r.set("stop_recording", 1)
+    logger.info("Set signal to stop recording")
 
 
 @router.put("/api/capture")
@@ -113,4 +111,4 @@ def capture():
     filepath = create_recording_filepath(state.output_dir, ".jpg")
     logger.info(f"Capture image to {filepath}")
     with Recorder(state) as camera:
-        camera.capture(filepath)
+        camera.capture(str(filepath))

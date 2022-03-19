@@ -1,14 +1,8 @@
+import os
 from pathlib import Path
-from pydantic import BaseModel, validator
+
+from pydantic import BaseModel
 from redis import Redis
-
-from utils import on_arm_machine
-
-# TODO: handle savefolder through env variables
-if on_arm_machine():
-    SAVEFOLDER = Path("/media/pi/Tord/kleocam")
-else:
-    SAVEFOLDER = Path("kleocam_temp")
 
 
 class CameraState(BaseModel):
@@ -17,8 +11,15 @@ class CameraState(BaseModel):
     iso: int = 300
     recording_time = 300
 
-    output_dir: Path = SAVEFOLDER
-    active: int = 0
+    # TODO: add validation for output_dir
+    output_dir: Path = Path(os.environ["OUTPUT_DIR"])
+    stop_recording: int = 0
+    recording: int = 0
+
+    def set_recording_stopped(self, r: Redis):
+        self.recording = 0
+        self.stop_recording = 0
+        self.to_redis(r)
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
@@ -31,7 +32,8 @@ class CameraState(BaseModel):
         r.set("iso", self.iso)
         r.set("recording_time", self.recording_time)
         r.set("savefolder", str(self.output_dir))
-        r.set("active", self.active)
+        r.set("stop_recording", self.stop_recording)
+        r.set("recording", self.recording)
 
     @staticmethod
     def from_redis(r: Redis):
@@ -41,5 +43,6 @@ class CameraState(BaseModel):
             iso=r.get("iso").decode(),
             recording_time=r.get("recording_time"),
             savefolder=Path(r.get("savefolder").decode()),
-            active=r.get("active"),
+            stop_recording=r.get("stop_recording"),
+            recording=r.get("recording"),
         )

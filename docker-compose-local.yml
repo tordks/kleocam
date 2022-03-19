@@ -6,14 +6,10 @@ services:
     image: redis:latest
     command: redis-server --save 600 10
     network_mode: host
-    # ports:
-    #   - 6379:6379
   app:
     container_name: kleocam
     image: kleocam:latest
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile-local
     network_mode: host
-    # depends_on:
-    #   - redis
-    # links:
-    #   - "redis:redis"

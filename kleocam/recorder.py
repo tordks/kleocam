@@ -1,8 +1,6 @@
 import time
-from pathlib import Path
-from unittest.mock import MagicMock
 
-from kleocam.utils import on_arm_machine
+from kleocam.utils import on_arm_machine, picamera_mock
 from kleocam.models.camera import CameraState
 
 
@@ -24,17 +22,9 @@ class Recorder:
                 resolution=state.resolution, framerate=state.framerate
             )
         else:
-            camera = MagicMock(
-                resolution=state.resolution, framerate=state.framerate
+            self.camera = picamera_mock(
+                state.resolution, framerate=state.framerate
             )
-            camera.wait_recording.side_effect = lambda rec_time: time.sleep(
-                rec_time
-            )
-            camera.split_recording.side_effect = lambda fpath: Path(
-                fpath
-            ).touch()
-            camera.capture.side_effect = lambda fpath: Path(fpath).touch()
-            self.camera = camera
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
@@ -63,9 +53,6 @@ class Recorder:
     def __del__(self):
         self.camera.close()
 
-    def update_state(self, state: CameraState):
-        ...
-
 
 if __name__ == "__main__":
     recorder = Recorder(CameraState())
@@ -73,5 +60,5 @@ if __name__ == "__main__":
     recorder.camera.capture("image.jpg")
 
     recorder.camera.start_recording("recording.h264")
-    recorder.camera.wait_recording(60)
+    recorder.camera.wait_recording(5)
     recorder.camera.stop_recording()

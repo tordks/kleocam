@@ -1,0 +1,26 @@
+# TODO: set up networking without using host network
+version: '3.8'
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    command: redis-server --save 600 10
+    network_mode: host
+  app:
+    container_name: kleocam
+    image: kleocam:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-pi
+    network_mode: host
+    volumes:
+        - /media/pi/Tord/kleocam/:/data
+        - /opt/vc:/opt/vc
+     #       # - ./python:/app
+    environment:
+      LD_LIBRARY_PATH: /opt/vc/lib
+     #   DISPLAY:
+    devices:
+      - "/dev/vchiq:/dev/vchiq"
+        # TODO: get access to camera without privileged mode
+    privileged: true
