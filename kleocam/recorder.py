@@ -7,9 +7,10 @@ from kleocam.models.camera import CameraState
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
 # TODO: Convert this to function that just returns camera object?
-class Recorder:
+class Camera:
     """
-    Class for taking images and recording video
+    Class that wraps a PiCamera and initiaites it with sensible settings. If not
+    developing on a RPi it will instead of a PiCamera set up a mock
     """
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
@@ -55,7 +56,7 @@ class Recorder:
 
 
 if __name__ == "__main__":
-    recorder = Recorder(CameraState())
+    recorder = Camera(CameraState())
 
     recorder.camera.capture("image.jpg")
 
