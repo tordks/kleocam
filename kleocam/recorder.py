@@ -20,6 +20,9 @@ class Camera:
     developing on a RPi it will instead of a PiCamera set up a mock
     """
 
+    # The maximum warmup time that will hapepn before recording starts
+    max_warmup_time: int = 4
+
     def __init__(self, state: CameraState, consistent_img: bool = True):
 
         self.camera = PiCamera(

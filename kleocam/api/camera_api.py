@@ -7,6 +7,7 @@ from fastapi import BackgroundTasks
 
 from kleocam.models.camera import CameraState
 from kleocam.recorder import Camera
+
 from redis import Redis
 
 router = fastapi.APIRouter()
@@ -24,14 +25,13 @@ def create_recording_filepath(recording_output_dir: Path, suffix: str):
 
 @router.get("/api/state")
 def state() -> CameraState:
-    r = Redis()
-    return CameraState.from_redis(r)
+    return CameraState.from_redis(Redis())
 
 
 @router.post("/api/state")
 def state(state: CameraState):
-    r = Redis()
-    state.to_redis(r)
+    state.to_redis(Redis())
+
 
 @router.put("/api/reset_state")
 def reset_state():

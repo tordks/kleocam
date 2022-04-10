@@ -13,3 +13,5 @@ services:
       context: .
       dockerfile: Dockerfile-local
     network_mode: host
+    volumes:
+      - ./data:/data
