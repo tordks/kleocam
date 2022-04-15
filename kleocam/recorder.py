@@ -3,6 +3,13 @@ import time
 from kleocam.utils import on_arm_machine, picamera_mock
 from kleocam.models.camera import CameraState
 
+# Assume we are on a raspberry pi if we are on an arm machine. If not we are in
+# development mode without access to the picamera module
+if on_arm_machine():
+    from picamera import PiCamera
+else:
+    PiCamera = picamera_mock
+
 
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
@@ -14,18 +21,10 @@ class Camera:
     """
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
-        # Assume we are on a raspberry pi if we are on an arm machine. If not we are in
-        # development mode without access to the picamera module
-        if on_arm_machine():
-            from picamera import PiCamera
 
-            self.camera = PiCamera(
-                resolution=state.resolution, framerate=state.framerate
-            )
-        else:
-            self.camera = picamera_mock(
-                state.resolution, framerate=state.framerate
-            )
+        self.camera = PiCamera(
+            resolution=state.resolution, framerate=state.framerate
+        )
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
