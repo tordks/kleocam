@@ -33,6 +33,10 @@ def state(state: CameraState):
     r = Redis()
     state.to_redis(r)
 
+@router.put("/api/reset_state")
+def reset_state():
+    CameraState().to_redis(Redis())
+
 
 @router.put("/api/start")
 async def start(background_tasks: BackgroundTasks):
