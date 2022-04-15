@@ -50,7 +50,9 @@ async def start(background_tasks: BackgroundTasks):
             r = Redis()
             state = CameraState.from_redis(r)
 
-            recording_output_dir = create_recording_output_dir(state.output_dir)
+            recording_output_dir = create_recording_output_dir(
+                state.output_dir / "recording"
+            )
             recording_output_dir.mkdir(parents=True)
             suffix = ".h264"
 
@@ -112,7 +114,10 @@ def capture():
     r = Redis()
     state = CameraState.from_redis(r)
 
-    filepath = create_recording_filepath(state.output_dir, ".jpg")
+    capture_dir = state.output_dir / "capture"
+    if not capture_dir.exists():
+        capture_dir.mkdir()
+    filepath = create_recording_filepath(capture_dir, ".jpg")
     logger.info(f"Capture image to {filepath}")
     with Camera(state) as camera:
         camera.capture(str(filepath))
