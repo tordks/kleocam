@@ -23,7 +23,7 @@ class CameraState(BaseModel):
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
-            r.lpush("resolution", *self.resolution)
+            r.lpush("resolution", *self.resolution[::-1])
         else:
             r.lset("resolution", 0, self.resolution[0])
             r.lset("resolution", 1, self.resolution[1])
