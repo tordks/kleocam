@@ -9,7 +9,7 @@ name = "kleocam"
 version = "0.0.2"
 
 [tool.poetry.dependencies]
-fastapi = "^0.75.0"
+fastapi = "^0.75.2"
 loguru = "^0.6.0"
 python = "^3.9"
 redis = "^4.1.4"
