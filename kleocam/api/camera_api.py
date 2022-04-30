@@ -6,7 +6,8 @@ import fastapi
 from fastapi import BackgroundTasks
 
 from kleocam.models.camera import CameraState
-from kleocam.recorder import Recorder
+from kleocam.recorder import Camera
+
 from redis import Redis
 
 router = fastapi.APIRouter()
@@ -24,14 +25,17 @@ def create_recording_filepath(recording_output_dir: Path, suffix: str):
 
 @router.get("/api/state")
 def state() -> CameraState:
-    r = Redis()
-    return CameraState.from_redis(r)
+    return CameraState.from_redis(Redis())
 
 
 @router.post("/api/state")
 def state(state: CameraState):
-    r = Redis()
-    state.to_redis(r)
+    state.to_redis(Redis())
+
+
+@router.put("/api/reset_state")
+def reset_state():
+    CameraState().to_redis(Redis())
 
 
 @router.put("/api/start")
@@ -46,11 +50,13 @@ async def start(background_tasks: BackgroundTasks):
             r = Redis()
             state = CameraState.from_redis(r)
 
-            recording_output_dir = create_recording_output_dir(state.output_dir)
+            recording_output_dir = create_recording_output_dir(
+                state.output_dir / "recording"
+            )
             recording_output_dir.mkdir(parents=True)
             suffix = ".h264"
 
-            with Recorder(state) as camera:
+            with Camera(state) as camera:
                 state.recording = 1
                 state.to_redis(r)
 
@@ -108,7 +114,10 @@ def capture():
     r = Redis()
     state = CameraState.from_redis(r)
 
-    filepath = create_recording_filepath(state.output_dir, ".jpg")
+    capture_dir = state.output_dir / "capture"
+    if not capture_dir.exists():
+        capture_dir.mkdir()
+    filepath = create_recording_filepath(capture_dir, ".jpg")
     logger.info(f"Capture image to {filepath}")
-    with Recorder(state) as camera:
+    with Camera(state) as camera:
         camera.capture(str(filepath))

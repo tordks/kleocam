@@ -12,7 +12,11 @@ class CameraState(BaseModel):
     recording_time = 300
 
     # TODO: add validation for output_dir
-    output_dir: Path = Path(os.environ["OUTPUT_DIR"])
+    output_dir: Path = (
+        Path(os.environ["OUTPUT_DIR"]) if "OUTPUT_DIR" in os.environ else None
+    )
+
+    # TODO: make these "private". Should not be able to be set at instantiation
     stop_recording: int = 0
     recording: int = 0
 
@@ -23,7 +27,7 @@ class CameraState(BaseModel):
 
     def to_redis(self, r: Redis):
         if "resolution" not in r:
-            r.lpush("resolution", *self.resolution)
+            r.lpush("resolution", *self.resolution[::-1])
         else:
             r.lset("resolution", 0, self.resolution[0])
             r.lset("resolution", 1, self.resolution[1])
@@ -31,18 +35,18 @@ class CameraState(BaseModel):
         r.set("framerate", self.framerate)
         r.set("iso", self.iso)
         r.set("recording_time", self.recording_time)
-        r.set("savefolder", str(self.output_dir))
+        r.set("output_dir", str(self.output_dir))
         r.set("stop_recording", self.stop_recording)
         r.set("recording", self.recording)
 
     @staticmethod
-    def from_redis(r: Redis):
+    def from_redis(redis_client: Redis):
         return CameraState(
-            resolution=r.lrange("resolution", 0, 2),
-            framerate=r.get("framerate").decode(),
-            iso=r.get("iso").decode(),
-            recording_time=r.get("recording_time"),
-            savefolder=Path(r.get("savefolder").decode()),
-            stop_recording=r.get("stop_recording"),
-            recording=r.get("recording"),
+            resolution=redis_client.lrange("resolution", 0, 2),
+            framerate=redis_client.get("framerate").decode(),
+            iso=redis_client.get("iso").decode(),
+            recording_time=redis_client.get("recording_time"),
+            output_dir=Path(redis_client.get("output_dir").decode()),
+            stop_recording=redis_client.get("stop_recording"),
+            recording=redis_client.get("recording"),
         )

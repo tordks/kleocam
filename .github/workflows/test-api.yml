@@ -1,0 +1,16 @@
+name: test-api
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Install Test Dependencies
+        run: pip install tox docker-compose requests
+      - name: Test building images and API functionality
+        run: ./test.sh

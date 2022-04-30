@@ -3,28 +3,31 @@ import time
 from kleocam.utils import on_arm_machine, picamera_mock
 from kleocam.models.camera import CameraState
 
+# Assume we are on a raspberry pi if we are on an arm machine. If not we are in
+# development mode without access to the picamera module
+if on_arm_machine():
+    from picamera import PiCamera
+else:
+    PiCamera = picamera_mock
+
 
 # TODO: Force singleton + share object?
 # TODO: Currently calling camera object directly, make wrapper to handle everything here?
 # TODO: Convert this to function that just returns camera object?
-class Recorder:
+class Camera:
     """
-    Class for taking images and recording video
+    Class that wraps a PiCamera and initiaites it with sensible settings. If not
+    developing on a RPi it will instead of a PiCamera set up a mock
     """
+
+    # The maximum warmup time that will hapepn before recording starts
+    max_warmup_time: int = 4
 
     def __init__(self, state: CameraState, consistent_img: bool = True):
-        # Assume we are on a raspberry pi if we are on an arm machine. If not we are in
-        # development mode without access to the picamera module
-        if on_arm_machine():
-            from picamera import PiCamera
 
-            self.camera = PiCamera(
-                resolution=state.resolution, framerate=state.framerate
-            )
-        else:
-            self.camera = picamera_mock(
-                state.resolution, framerate=state.framerate
-            )
+        self.camera = PiCamera(
+            resolution=state.resolution, framerate=state.framerate
+        )
 
         # Capturing consistent images: https://picamera.readthedocs.io/en/release-1.13/recipes1.html#capturing-consistent-images.
         if consistent_img:
@@ -55,7 +58,7 @@ class Recorder:
 
 
 if __name__ == "__main__":
-    recorder = Recorder(CameraState())
+    recorder = Camera(CameraState())
 
     recorder.camera.capture("image.jpg")
 
