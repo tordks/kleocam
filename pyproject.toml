@@ -19,6 +19,6 @@ uvicorn = "^0.17.6"
 # need to be installed when not on rpi
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1"
+pytest = "^7.2"
 tox = "^3.25.0"
 requests = "^2.27.1"
