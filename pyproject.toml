@@ -20,5 +20,5 @@ uvicorn = "^0.17.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1"
-tox = "^3.25.0"
+tox = "^4.0.17"
 requests = "^2.27.1"
